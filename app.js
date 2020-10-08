@@ -6,6 +6,7 @@ const gameModel = require('./models/game');
 
 //import the readline module. to read inputs from the console
 const readline = require('readline');
+const { Hash } = require('crypto');
 
 // 
 readline.emitKeypressEvents(process.stdin);
@@ -59,15 +60,17 @@ function initializePlayers(totalPlayers) {
 // Global array to contain the id of the players whose next chance need to be skipped.
 // chance of a player is skipped if he/she rolls the dice and gets two consicutive 1's
 const skipChanceForPlayer = [];
+var checkForOnes = new Set();
 
 // This function will loop through all the players and give them a chance to roll the dice.
 // This will continue until all the player reach the max score
 async function startGame(players, maxScore) {
     console.log('start game');
     var rank = 1;
-    while (players.length > rank) {
+    while (rank < players.length) {
         for (const player of players) {
-
+            // var player = player;
+            console.log(player);
             // Skip the payer if he/she has finished the game.
             if (player.rank != 0) {
                 continue;
@@ -84,7 +87,6 @@ async function startGame(players, maxScore) {
                 await keyPress()
                     .then((result) => {
                         var rolledValue = rollDice(maxScore, player.score);
-                        rl.write('\nPoints Scored : ' + rolledValue);
                         player.score += rolledValue;
 
                         // If the max score is reached then assign a rank to the player.
@@ -92,8 +94,10 @@ async function startGame(players, maxScore) {
                             // TODO : either add it in some other array or place the winning order
                             player.rank = rank++;
                             rl.write(`\n${player.name} succesfuly completed the game. Scored ${player.rank} rank \n`);
+                            // continue;
                         }
                         else {
+                            
                             if (rolledValue == 1) {
                                 // if present in hjashset{
                                 // add in skip array
@@ -108,16 +112,19 @@ async function startGame(players, maxScore) {
                         printRankTable(players);
                     })
                     .catch(err => console.log(err));
+
             }
         }
     }
-    // process.stdin.pause();
+    // this is to stop taking the input.
+    process.stdin.pause();
 }
 
 // This function simulates a dice roll. 
 // If the user rolls a 6, he/she gets an extra chance to play.
 function rollDice(maxScore, currentScore) {
     var value = Math.floor(Math.random() * 6) + 1;
+    rl.write('\nPoints Scored : ' + rolledValue);
     if ((currentScore) > maxScore) {
         return 0;
     }
@@ -145,7 +152,7 @@ function keyPress() {
 
 // function to print the rank table
 function printRankTable(players) {
-    const tempPlayers = [...players];
+    const tempPlayers = JSON.parse(JSON.stringify(players));;
 
     // custom sort function to arrange the players according to the score
     tempPlayers.sort(function compare(player1, player2) {
@@ -158,6 +165,7 @@ function printRankTable(players) {
         return 0;
     });
 
+    // Assign ranks to each of the players according to the current score
     for (let index = 0; index < tempPlayers.length; index++) {
         var player = tempPlayers[index];
         player.rank = index + 1;
@@ -165,7 +173,6 @@ function printRankTable(players) {
 
     rl.write('\nRank Table : \n');
     console.table(tempPlayers, ["name", "score", "rank"]);
-
 }
 
 // This is the entry point for the program / Application / Game
