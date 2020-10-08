@@ -13,7 +13,7 @@ const readline = require('readline');
  */
 const skipChanceForPlayer = [];
 
-// Set to keep track if a 1 was rolled in the previous turn
+// Set to keep track of players who rolled a 1 in the previous turn.
 var checkForOnes = new Set();
 
 // 
@@ -28,8 +28,9 @@ const rl = readline.createInterface({
 /**
  * 
  * @param {*} callback The callback which will tell the caller function that all the inputs have been taken and 
- *                     the players have been added in the list/array.
- * function to start a initialize a new game.
+ * the players have been added in the list/array.
+ * 
+ * function to start and initialize a new game.
  * this sets the total number of players and the game details such as game id, max score and player count
  */
 function initializeGame(callback) {
@@ -61,6 +62,7 @@ function initializeGame(callback) {
 /**
  * 
  * @param {*} totalPlayersCount The count of the total number of players who want to play the game.
+ * 
  * function to initialize the players. 
  * This function will generate n player objects and add it in the array.
  */
@@ -78,39 +80,34 @@ function initializePlayers(totalPlayersCount) {
  * 
  * @param {*} players The array which contains the list of all the players in a random order.
  * @param {*} maxScore The minimum score a player needs to have to win the game.
+ * 
  * This function will loop through all the players and give them a chance to roll the dice.
  * This will continue until all the player reach the max score
  */
 async function startGame(players, maxScore) {
     console.log('start game');
     var rank = 0;
-    while (rank < players.length) {
-        for (const player of players) {
-            // Skip the payer if he/she has finished the game.
-            if (player.rank != 0) {
-                continue;
-            }
 
-            // skip the chance if the player has scored two once in a row.
-            if (skipChanceForPlayer.find(id => id === player.id)) {
-                console.log(`Skipping chance for ${player.name} as you scored two consecutive 1's`);
-                const index = skipChanceForPlayer.indexOf(player.id);
-                if (index > -1) {
-                    skipChanceForPlayer.splice(index, 1);
-                }
-                continue;
-            }
-            else {
+    // loop through all the players until all have been assigned a rank.
+    while (rank < players.length) {
+
+        // loop to maintain the players turn order for each round 
+        for (const player of players) {
+            // check the skip conditions.
+            if (!shouldThePlayerBeSkipped(player)) {
+
                 console.log(`\n${player.name} it's your turn\n(Press R to to roll the dice...Press E to exit the game!!)`);
+
+                // wait for the keypress event to be triggered. Once triggered it will return a promise
                 await keyPress()
                     .then((result) => {
                         if (result === 'r') {
+                            // roll the dice for the current player, and add the value in the players score
                             var rolledValue = rollDice(maxScore, player.score);
                             player.score += rolledValue;
 
                             // If the max score is reached then assign a rank to the player.
                             if (player.score >= maxScore) {
-                                // TODO : either add it in some other array or place the winning order
                                 player.rank = ++rank;
                                 rl.write(`\n${player.name} succesfuly completed the game. Scored ${player.rank} rank \n`);
                             }
@@ -122,7 +119,7 @@ async function startGame(players, maxScore) {
                             printRankTable(players);
                         }
                         else {
-                            rl.write(`\n${player.name} do not want to play. Ending game\n`);
+                            rl.write(`\n${player.name} do not want to play. Ending the game\n`);
                             exitGame()
                         }
                     })
@@ -132,6 +129,30 @@ async function startGame(players, maxScore) {
     }
     // this is to stop taking the input.
     process.stdin.pause();
+}
+
+/**
+ * 
+ * @param {*} player The player for which the skip conditions need to be evaluated.
+ * 
+ * If the player has already finished the game or the player has rolled 1's consecutively then skip the next turn
+ * else do not skip the players turn.
+ */
+function shouldThePlayerBeSkipped(player) {
+    if (player.rank != 0) {
+        return true;
+    }
+
+    // skip the chance if the player has scored two once in a row.
+    if (skipChanceForPlayer.find(id => id === player.id)) {
+        console.log(`Skipping chance for ${player.name} as you scored two consecutive 1's`);
+        const index = skipChanceForPlayer.indexOf(player.id);
+        if (index > -1) {
+            skipChanceForPlayer.splice(index, 1);
+        }
+        return true;
+    }
+    return false;
 }
 
 /**
@@ -177,9 +198,10 @@ function keyPress() {
  * This depends on the rolledValue
  */
 function handleStatesForNextTurn(rolledValue, playerID) {
-    // Check of the player rolled multiple 6's and then a 1
+    // Check if the player rolled multiple 6's and then a 1
     var remainder = rolledValue > 6 ? (rolledValue % 6) : 0;
 
+    // if player rolled 1 then check the last rolled value, to decide if next turn needs to be skipped or not.
     if (rolledValue == 1) {
         if (checkForOnes.has(playerID)) {
             skipChanceForPlayer.push(playerID);
@@ -193,7 +215,7 @@ function handleStatesForNextTurn(rolledValue, playerID) {
         checkForOnes.add(playerID);
     }
     else {
-        // remove from hashset if presnt
+        // remove player from set if present
         if (checkForOnes.has(playerID)) {
             checkForOnes.delete(playerID);
         }

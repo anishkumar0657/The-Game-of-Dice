@@ -1,11 +1,10 @@
-//empty array to store the game details
-const games = [];
-
-//empty array to store the psqlayer details
+// empty array to store all the players
 const players = [];
+
+// variable to keep track of the ongoing game
 var ongoingGame;
 
-//Player class to define the game model
+//Game class to define the game model
 module.exports = class Game {
     constructor(id, playerCount, maxScore, players) {
         this.id = id;
@@ -14,18 +13,17 @@ module.exports = class Game {
         this.players = players;
     }
 
-    //adding ongoing games in the array, just for convinence
+    // initialize the variable with the current active game
     startGame() {
-        // ongoingGame.push(this);
         ongoingGame = this;
     }
 
-    //removing the current game from the array
+    // initializing the current game as null. Called when need to end the game.
     endGame() {
-        ongoingGame.pop();
+        ongoingGame = null;
     }
 
-    //static method to fetch / return all the players present in the array
+    // static method to fetch / return all the players present in the array
     static fetchAllPlayers() {
         return players;
     }
@@ -35,10 +33,12 @@ module.exports = class Game {
         return ongoingGame;
     }
 
+    // used to add the player in the players array.
     static addPlayer(player) {
         players.push(player);
     }
 
+    // used to shuffle the players. This is to ensure that the starting player is always random
     static shufflePlayers() {
         var currentIndex = players.length, temporaryValue, randomIndex;
 
