@@ -247,6 +247,7 @@ function printRankTable(players) {
 
     rl.write('\nRank Table : \n');
     console.table(tempPlayers, ["name", "score", "rank"]);
+    return 'success';
 }
 
 // This is called when someone pressed E. This function will finish the game.
@@ -267,3 +268,4 @@ initializeGame(function () {
     startGame(ongoingGame.players, ongoingGame.maxScore);
 });
 
+module.exports = printRankTable;
