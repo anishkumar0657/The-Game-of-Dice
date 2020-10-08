@@ -69,8 +69,6 @@ async function startGame(players, maxScore) {
     var rank = 1;
     while (rank < players.length) {
         for (const player of players) {
-            // var player = player;
-            console.log(player);
             // Skip the payer if he/she has finished the game.
             if (player.rank != 0) {
                 continue;
@@ -78,12 +76,15 @@ async function startGame(players, maxScore) {
 
             // skip the chance if the player has scored two once in a row.
             if (skipChanceForPlayer.find(id => id === player.id)) {
-                console.log('Skipping chance for Player => ' + player.name);
-                skipChanceForPlayer.pop(player.id);
+                console.log(`Skipping chance for ${player.name} as you scored two consecutive 1's`);
+                const index = skipChanceForPlayer.indexOf(player.id);
+                if (index > -1) {
+                    skipChanceForPlayer.splice(index, 1);
+                }
                 continue;
             }
             else {
-                console.log(`\n${player.name} it's your turn (Press R to to roll the dice !!)`);
+                console.log(`\n${player.name} it's your turn\n(Press R to to roll the dice...Press E to exit the game!!)`);
                 await keyPress()
                     .then((result) => {
                         var rolledValue = rollDice(maxScore, player.score);
@@ -94,25 +95,15 @@ async function startGame(players, maxScore) {
                             // TODO : either add it in some other array or place the winning order
                             player.rank = rank++;
                             rl.write(`\n${player.name} succesfuly completed the game. Scored ${player.rank} rank \n`);
-                            // continue;
                         }
                         else {
-                            
-                            if (rolledValue == 1) {
-                                // if present in hjashset{
-                                // add in skip array
-                                // }
-                                // else
-                                // insert in hashset
-                            }
-                            // else{
-                            // remove from hashset if presnt
-                            // }
+                            handleStatesForNextTurn(rolledValue, player.id);
                         }
+
+                        // prints the rank table after each dice roll
                         printRankTable(players);
                     })
                     .catch(err => console.log(err));
-
             }
         }
     }
@@ -123,8 +114,9 @@ async function startGame(players, maxScore) {
 // This function simulates a dice roll. 
 // If the user rolls a 6, he/she gets an extra chance to play.
 function rollDice(maxScore, currentScore) {
-    var value = Math.floor(Math.random() * 6) + 1;
-    rl.write('\nPoints Scored : ' + rolledValue);
+    // var value = Math.floor(Math.random() * 6) + 1;
+    var value = Math.floor(Math.random() * 1) + 1;
+    rl.write('\nPoints Scored : ' + value);
     if ((currentScore) > maxScore) {
         return 0;
     }
@@ -150,6 +142,31 @@ function keyPress() {
     });
 }
 
+// This function decided if the next chance needs to be skipped or not.
+function handleStatesForNextTurn(rolledValue, playerID) {
+    // Check of the player rolled multiple 6's and then a 1
+    var remainder = rolledValue > 6 ? (rolledValue % 6) : 0;
+
+    if (rolledValue == 1) {
+        if (checkForOnes.has(playerID)) {
+            skipChanceForPlayer.push(playerID);
+            checkForOnes.delete(playerID);
+        }
+        else {
+            checkForOnes.add(playerID);
+        }
+    }
+    else if (remainder == 1) {
+        checkForOnes.add(playerID);
+    }
+    else {
+        // remove from hashset if presnt
+        if (checkForOnes.has(playerID)) {
+            checkForOnes.delete(playerID);
+        }
+    }
+}
+
 // function to print the rank table
 function printRankTable(players) {
     const tempPlayers = JSON.parse(JSON.stringify(players));;
@@ -165,9 +182,11 @@ function printRankTable(players) {
         return 0;
     });
 
-    // Assign ranks to each of the players according to the current score
+    // Assign ranks to each of the players according to the current score, only if they havent finished the game. 
     for (let index = 0; index < tempPlayers.length; index++) {
         var player = tempPlayers[index];
+        if (player.rank != 0)
+            continue;
         player.rank = index + 1;
     }
 
