@@ -6,7 +6,15 @@ const gameModel = require('./models/game');
 
 //import the readline module. to read inputs from the console
 const readline = require('readline');
-const { Hash } = require('crypto');
+
+/* 
+ * Global array to contain the id of the players whose next chance need to be skipped.
+ * chance of a player is skipped if he/she rolls the dice and gets two consicutive 1's
+ */
+const skipChanceForPlayer = [];
+
+// Set to keep track if a 1 was rolled in the previous turn
+var checkForOnes = new Set();
 
 // 
 readline.emitKeypressEvents(process.stdin);
@@ -17,8 +25,13 @@ const rl = readline.createInterface({
     output: process.stdout
 });
 
-// function to start a initialize a new game.
-// this sets the total number of players and the game details such as game id, max score and player count
+/**
+ * 
+ * @param {*} callback The callback which will tell the caller function that all the inputs have been taken and 
+ *                     the players have been added in the list/array.
+ * function to start a initialize a new game.
+ * this sets the total number of players and the game details such as game id, max score and player count
+ */
 function initializeGame(callback) {
     var totalPlayers = 0;
     var maxScore = 0;
@@ -45,28 +58,32 @@ function initializeGame(callback) {
     });
 }
 
-// function to initialize the players. 
-// This function will generate n player objects and add it in the array.
-function initializePlayers(totalPlayers) {
+/**
+ * 
+ * @param {*} totalPlayersCount The count of the total number of players who want to play the game.
+ * function to initialize the players. 
+ * This function will generate n player objects and add it in the array.
+ */
+function initializePlayers(totalPlayersCount) {
     const initialScore = 0;
     const initialRank = 0;
-    for (let index = 1; index <= totalPlayers; index++) {
+    for (let index = 1; index <= totalPlayersCount; index++) {
         var name = "Player-" + index;
         const player = new playerModel(index, name, initialScore, initialRank);
         gameModel.addPlayer(player);
     }
 }
 
-// Global array to contain the id of the players whose next chance need to be skipped.
-// chance of a player is skipped if he/she rolls the dice and gets two consicutive 1's
-const skipChanceForPlayer = [];
-var checkForOnes = new Set();
-
-// This function will loop through all the players and give them a chance to roll the dice.
-// This will continue until all the player reach the max score
+/**
+ * 
+ * @param {*} players The array which contains the list of all the players in a random order.
+ * @param {*} maxScore The minimum score a player needs to have to win the game.
+ * This function will loop through all the players and give them a chance to roll the dice.
+ * This will continue until all the player reach the max score
+ */
 async function startGame(players, maxScore) {
     console.log('start game');
-    var rank = 1;
+    var rank = 0;
     while (rank < players.length) {
         for (const player of players) {
             // Skip the payer if he/she has finished the game.
@@ -87,21 +104,27 @@ async function startGame(players, maxScore) {
                 console.log(`\n${player.name} it's your turn\n(Press R to to roll the dice...Press E to exit the game!!)`);
                 await keyPress()
                     .then((result) => {
-                        var rolledValue = rollDice(maxScore, player.score);
-                        player.score += rolledValue;
+                        if (result === 'r') {
+                            var rolledValue = rollDice(maxScore, player.score);
+                            player.score += rolledValue;
 
-                        // If the max score is reached then assign a rank to the player.
-                        if (player.score >= maxScore) {
-                            // TODO : either add it in some other array or place the winning order
-                            player.rank = rank++;
-                            rl.write(`\n${player.name} succesfuly completed the game. Scored ${player.rank} rank \n`);
+                            // If the max score is reached then assign a rank to the player.
+                            if (player.score >= maxScore) {
+                                // TODO : either add it in some other array or place the winning order
+                                player.rank = ++rank;
+                                rl.write(`\n${player.name} succesfuly completed the game. Scored ${player.rank} rank \n`);
+                            }
+                            else {
+                                handleStatesForNextTurn(rolledValue, player.id);
+                            }
+
+                            // prints the rank table after each dice roll
+                            printRankTable(players);
                         }
                         else {
-                            handleStatesForNextTurn(rolledValue, player.id);
+                            rl.write(`\n${player.name} do not want to play. Ending game\n`);
+                            exitGame()
                         }
-
-                        // prints the rank table after each dice roll
-                        printRankTable(players);
                     })
                     .catch(err => console.log(err));
             }
@@ -111,11 +134,15 @@ async function startGame(players, maxScore) {
     process.stdin.pause();
 }
 
-// This function simulates a dice roll. 
-// If the user rolls a 6, he/she gets an extra chance to play.
+/**
+ * 
+ * @param {*} maxScore The minimum score a player needs to have to win the game.
+ * @param {*} currentScore the current score of the player who is about to roll the dice
+ * This function simulates a dice roll. 
+ * If the user rolls a 6, he/she gets an extra chance to play.
+ */
 function rollDice(maxScore, currentScore) {
-    // var value = Math.floor(Math.random() * 6) + 1;
-    var value = Math.floor(Math.random() * 1) + 1;
+    var value = Math.floor(Math.random() * 6) + 1;
     rl.write('\nPoints Scored : ' + value);
     if ((currentScore) > maxScore) {
         return 0;
@@ -135,14 +162,20 @@ function keyPress() {
     process.stdin.resume();
     return new Promise(function (resolve, reject) {
         process.stdin.on('keypress', (str, key) => {
-            if (key.name === 'r') {
-                resolve();
+            if (key.name === 'r' || key.name === 'e') {
+                resolve(key.name);
             }
         });
     });
 }
 
-// This function decided if the next chance needs to be skipped or not.
+/**
+ * 
+ * @param {*} rolledValue The totl score which the player has accumulated in a single roll. 
+ * @param {*} playerID The player who rolled the dice
+ * This function decided if the next chance needs to be skipped or not.
+ * This depends on the rolledValue
+ */
 function handleStatesForNextTurn(rolledValue, playerID) {
     // Check of the player rolled multiple 6's and then a 1
     var remainder = rolledValue > 6 ? (rolledValue % 6) : 0;
@@ -194,9 +227,19 @@ function printRankTable(players) {
     console.table(tempPlayers, ["name", "score", "rank"]);
 }
 
-// This is the entry point for the program / Application / Game
-// function to start the game. this will return a callback when all the players are initialized. 
-// After initializing the players the game will start.
+// This is called when someone pressed E. This function will finish the game.
+function exitGame() {
+    printRankTable(players);
+    gameModel.exitGame();
+    process.exit();
+}
+
+/**
+ * This is the entry point for the program / Application / Game
+ * Function to start the game. this will return a callback when all the players are initialized. 
+ * After initializing the players the game will start.
+ */
+
 initializeGame(function () {
     const ongoingGame = gameModel.getOngoingGame();
     startGame(ongoingGame.players, ongoingGame.maxScore);
