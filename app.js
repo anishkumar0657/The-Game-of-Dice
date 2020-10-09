@@ -179,11 +179,14 @@ function shouldThePlayerBeSkipped(player) {
  * If the user rolls a 6, he/she gets an extra chance to play.
  */
 function rollDice(maxScore, currentScore) {
+    // get the random value from 1 to 6 both inclusive
     var value = Math.floor(Math.random() * 6) + 1;
-    rl.write('\n\nPoints Scored : ' + value);
+
+    // check if the player has crossed the max score after rolling a 6
     if ((currentScore) > maxScore) {
         return 0;
     }
+    rl.write('\n\nPoints Scored : ' + value);
     if (value < 6) {
         return value;
     }
