@@ -43,19 +43,25 @@ function initializeGame(callback) {
         if (totalPlayerCount > 1) {
             totalPlayers = totalPlayerCount;
             rl.question('Enter the maximum score : ', (maxGameScore) => {
-                maxScore = maxGameScore;
-                //method to add players in the array as per the totalPlayer count.
-                initializePlayers(totalPlayers);
+                if (maxGameScore > 0) {
+                    maxScore = maxGameScore;
+                    //method to add players in the array as per the totalPlayer count.
+                    initializePlayers(totalPlayers);
 
-                //randamize the players array, so that the order in which the users roll the dice is decided at the start of the game.
-                // we can just loop through the randamized array for convinence
-                gameModel.shufflePlayers();
+                    //randamize the players array, so that the order in which the users roll the dice is decided at the start of the game.
+                    // we can just loop through the randamized array for convinence
+                    gameModel.shufflePlayers();
 
-                //add game related data
-                const newGame = new gameModel(new Date().valueOf(), parseInt(totalPlayers), parseInt(maxScore), gameModel.fetchAllPlayers());
-                newGame.startGame();
-                // rl.pause();
-                callback();
+                    //add game related data
+                    const newGame = new gameModel(new Date().valueOf(), parseInt(totalPlayers), parseInt(maxScore), gameModel.fetchAllPlayers());
+                    newGame.startGame();
+                    // rl.pause();
+                    callback();
+                }
+                else {
+                    rl.write('\nPoints to achieve cannot be 0.\nPlease restart the game!!\n');
+                    rl.pause();
+                }
             })
         }
         else {
