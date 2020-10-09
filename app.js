@@ -92,18 +92,18 @@ function initializePlayers(totalPlayersCount) {
  * This will continue until all the player reach the max score
  */
 async function startGame(players, maxScore) {
-    console.log('start game');
+    rl.write('\nGame has Started!!\n');
     var rank = 0;
 
     // loop through all the players until all have been assigned a rank.
     while (rank < players.length) {
-
+        rl.write('=================================================================\n');
         // loop to maintain the players turn order for each round 
         for (const player of players) {
             // check the skip conditions.
             if (!shouldThePlayerBeSkipped(player)) {
 
-                console.log(`\n${player.name} it's your turn\n(Press R to to roll the dice...Press E to exit the game!!)`);
+                rl.write(`\n${player.name} it's your turn\n(Press R to to roll the dice...Press E to exit the game!!)`);
 
                 // wait for the keypress event to be triggered. Once triggered it will return a promise
                 await keyPress()
@@ -132,6 +132,8 @@ async function startGame(players, maxScore) {
                     })
                     .catch(err => console.log(err));
             }
+            // just to indicate the end of chance of player
+            rl.write('--------------------------------------------------\n');
         }
     }
     // this is to stop taking the input.
@@ -152,7 +154,7 @@ function shouldThePlayerBeSkipped(player) {
 
     // skip the chance if the player has scored two once in a row.
     if (skipChanceForPlayer.find(id => id === player.id)) {
-        console.log(`Skipping chance for ${player.name} as you scored two consecutive 1's`);
+        rl.write(`Skipping chance for ${player.name} as you scored two consecutive 1's`);
         const index = skipChanceForPlayer.indexOf(player.id);
         if (index > -1) {
             skipChanceForPlayer.splice(index, 1);
@@ -171,7 +173,7 @@ function shouldThePlayerBeSkipped(player) {
  */
 function rollDice(maxScore, currentScore) {
     var value = Math.floor(Math.random() * 6) + 1;
-    rl.write('\nPoints Scored : ' + value);
+    rl.write('\n\nPoints Scored : ' + value);
     if ((currentScore) > maxScore) {
         return 0;
     }
@@ -275,11 +277,10 @@ initializeGame(function () {
     startGame(ongoingGame.players, ongoingGame.maxScore);
 });
 
-function test() {
-    initializeGame();
-}
 
 module.exports = {
-    printRankTable, initializeGame, initializePlayers, shouldThePlayerBeSkipped, rollDice, handleStatesForNextTurn, test,
+    printRankTable, initializePlayers, shouldThePlayerBeSkipped, rollDice, handleStatesForNextTurn,
     skipChanceForPlayer, checkForOnes
 };
+
+exports.initializeGame = initializeGame;

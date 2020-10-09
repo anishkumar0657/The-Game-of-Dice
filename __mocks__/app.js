@@ -2,7 +2,6 @@ const gameModel = require('../models/game');
 const { initializePlayers } = require('../app');
 
 function initializeGame() {
-    console.log('\n\ninitialize mock function');
 
     totalPlayers = 4;
     maxScore = 9;
@@ -16,7 +15,8 @@ function initializeGame() {
 
     //add game related data
     const newGame = new gameModel(new Date().valueOf(), parseInt(totalPlayers), parseInt(maxScore), gameModel.fetchAllPlayers());
-    newGame.startGame();
+    newGame.startGame()
+    return Promise.resolve();
 }
 
-module.exports = initializeGame;
+exports.initializeGame = initializeGame;
