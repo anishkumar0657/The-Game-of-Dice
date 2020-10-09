@@ -15,6 +15,7 @@ This project uses a number of open source projects to work properly:
 
 * [node] - to run the javascript files
 * [jest] - for unit testing
+* [babel-jest] - to use the ES6 import/export syntax with jest
 
 ### Installation
 

@@ -16,12 +16,13 @@ const skipChanceForPlayer = [];
 // Set to keep track of players who rolled a 1 in the previous turn.
 var checkForOnes = new Set();
 
-// 
+// To listen to the key event
 readline.emitKeypressEvents(process.stdin);
 if (process.stdin.setRawMode) {
     process.stdin.setRawMode(true)
 }
 
+// readline interface to read and write from console.
 const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
@@ -265,7 +266,7 @@ function printRankTable(players) {
     return 'success';
 }
 
-// This is called when someone pressed E. This function will finish the game.
+// This is called when someone pressed E. This function will end the game.
 function exitGame() {
     printRankTable(players);
     gameModel.exitGame();
@@ -277,16 +278,14 @@ function exitGame() {
  * Function to start the game. this will return a callback when all the players are initialized.
  * After initializing the players the game will start.
  */
-
 initializeGame(function () {
     const ongoingGame = gameModel.getOngoingGame();
     startGame(ongoingGame.players, ongoingGame.maxScore);
 });
 
 
+// exporting the functions for UT
 module.exports = {
-    printRankTable, initializePlayers, shouldThePlayerBeSkipped, rollDice, handleStatesForNextTurn,
+    printRankTable, initializePlayers, shouldThePlayerBeSkipped, rollDice, handleStatesForNextTurn, initializeGame,
     skipChanceForPlayer, checkForOnes
 };
-
-exports.initializeGame = initializeGame;
