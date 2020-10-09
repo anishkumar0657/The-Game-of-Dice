@@ -17,7 +17,7 @@ This project uses a number of open source projects to work properly:
 * [jest] - for unit testing
 * [babel-jest] - to use the ES6 import/export syntax with jest
 
-### Installation
+### Installation and Running the application
 
 Clone the repository in the user location.
 
