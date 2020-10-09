@@ -18,7 +18,9 @@ var checkForOnes = new Set();
 
 // 
 readline.emitKeypressEvents(process.stdin);
-process.stdin.setRawMode(true);
+if (process.stdin.setRawMode) {
+    process.stdin.setRawMode(true)
+}
 
 const rl = readline.createInterface({
     input: process.stdin,
@@ -38,7 +40,7 @@ function initializeGame(callback) {
     var maxScore = 0;
 
     rl.question('Enter the total number of players : ', (totalPlayerCount) => {
-        if (totalPlayerCount) {
+        if (totalPlayerCount > 1) {
             totalPlayers = totalPlayerCount;
             rl.question('Enter the maximum score : ', (maxGameScore) => {
                 maxScore = maxGameScore;
@@ -55,6 +57,10 @@ function initializeGame(callback) {
                 // rl.pause();
                 callback();
             })
+        }
+        else {
+            rl.write('Minimum 2 players are required.\nPlease restart the game!!\n');
+            rl.pause();
         }
     });
 }
@@ -74,6 +80,7 @@ function initializePlayers(totalPlayersCount) {
         const player = new playerModel(index, name, initialScore, initialRank);
         gameModel.addPlayer(player);
     }
+    return gameModel.fetchAllPlayers();
 }
 
 /**
@@ -120,7 +127,7 @@ async function startGame(players, maxScore) {
                         }
                         else {
                             rl.write(`\n${player.name} do not want to play. Ending the game\n`);
-                            exitGame()
+                            exitGame();
                         }
                     })
                     .catch(err => console.log(err));
@@ -224,7 +231,7 @@ function handleStatesForNextTurn(rolledValue, playerID) {
 
 // function to print the rank table
 function printRankTable(players) {
-    const tempPlayers = JSON.parse(JSON.stringify(players));;
+    const tempPlayers = JSON.parse(JSON.stringify(players));
 
     // custom sort function to arrange the players according to the score
     tempPlayers.sort(function compare(player1, player2) {
@@ -258,8 +265,8 @@ function exitGame() {
 }
 
 /**
- * This is the entry point for the program / Application / Game
- * Function to start the game. this will return a callback when all the players are initialized. 
+ * This is the entry point for the program / Application / Game.
+ * Function to start the game. this will return a callback when all the players are initialized.
  * After initializing the players the game will start.
  */
 
@@ -268,4 +275,11 @@ initializeGame(function () {
     startGame(ongoingGame.players, ongoingGame.maxScore);
 });
 
-module.exports = printRankTable;
+function test() {
+    initializeGame();
+}
+
+module.exports = {
+    printRankTable, initializeGame, initializePlayers, shouldThePlayerBeSkipped, rollDice, handleStatesForNextTurn, test,
+    skipChanceForPlayer, checkForOnes
+};

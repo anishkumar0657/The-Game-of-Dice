@@ -18,6 +18,11 @@
   },
   "homepage": "https://github.com/anishkumar0657/The-Game-of-Dice#readme",
   "devDependencies": {
+    "@babel/preset-env": "^7.11.5",
+    "babel-jest": "^26.5.2",
     "jest": "^26.5.2"
+  },
+  "dependencies": {
+    "mock-stdin": "^1.0.0"
   }
 }

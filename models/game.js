@@ -19,7 +19,7 @@ module.exports = class Game {
     }
 
     // initializing the current game as null. Called when need to end the game.
-    endGame() {
+    static endGame() {
         ongoingGame = null;
     }
 
@@ -36,6 +36,7 @@ module.exports = class Game {
     // used to add the player in the players array.
     static addPlayer(player) {
         players.push(player);
+        return players.find(p => p.id == player.id);
     }
 
     // used to shuffle the players. This is to ensure that the starting player is always random
